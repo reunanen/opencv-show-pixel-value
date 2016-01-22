@@ -15,16 +15,23 @@ ShowPixelValue::~ShowPixelValue()
     cv::setMouseCallback(windowName, NULL, this);
 }
 
+cv::Scalar GetOuterColor()
+{
+    return cvScalarAll(0);
+}
+
+cv::Scalar GetInnerColor(int imageType)
+{
+    return imageType == CV_8UC3
+        ? cv::Scalar(128, 255, 128)
+        : cv::Scalar(255, 255, 255);
+}
+
 void PutText(cv::Mat& input, const std::string& text, const cv::Point& origin)
 {
     const double fontSize = 1.0;
-
-    const cv::Scalar textColor = input.type() == CV_8UC3
-        ? cv::Scalar(128, 255, 128)
-        : cv::Scalar(255, 255, 255);
-
-    cv::putText(input, text, origin, cv::FONT_HERSHEY_PLAIN, fontSize, cv::Scalar(0, 0, 0), 3);
-    cv::putText(input, text, origin, cv::FONT_HERSHEY_PLAIN, fontSize, textColor, 1);
+    cv::putText(input, text, origin, cv::FONT_HERSHEY_PLAIN, fontSize, GetOuterColor(), 3);
+    cv::putText(input, text, origin, cv::FONT_HERSHEY_PLAIN, fontSize, GetInnerColor(input.type()), 1);
 }
 
 std::string GetPixelValueText(const cv::Mat& input, int mouseX, int mouseY)
@@ -61,17 +68,24 @@ void ShowPixelValue::OnMouse(int event, int mouseX, int mouseY, int flags, void*
 {
     ShowPixelValue* showPixelValue = reinterpret_cast<ShowPixelValue*>(userdata);
 
-    if (showPixelValue == NULL || showPixelValue->input.data == NULL) {
+    if (showPixelValue == NULL) {
         return;
     }
 
-    const cv::Mat& input = showPixelValue->input;
+    showPixelValue->Update(mouseX, mouseY, false);
+    showPixelValue->UpdateOthers(mouseX, mouseY);
+}
+
+void ShowPixelValue::Update(int mouseX, int mouseY, bool showPoint)
+{
+    if (input.data == NULL) {
+        return;
+    }
 
     if (mouseX < 0 || mouseY < 0 || mouseX >= input.cols || mouseY >= input.rows) {
         return;
     }
 
-    cv::Mat& output = showPixelValue->output;
     input.copyTo(output);
 
     cv::Point pixelValueOrigin(mouseX + 4, mouseY - 4);
@@ -80,5 +94,30 @@ void ShowPixelValue::OnMouse(int event, int mouseX, int mouseY, int flags, void*
     PutText(output, GetPixelValueText(input, mouseX, mouseY), pixelValueOrigin);
     PutText(output, GetCoordinatesText(mouseX, mouseY), coordinatesOrigin);
 
-    cv::imshow(showPixelValue->windowName, output);
+    if (showPoint) {
+        cv::Point point(mouseX, mouseY);
+        cv::circle(output, point, 1, GetOuterColor(), 1);
+        cv::circle(output, point, 0, GetInnerColor(input.type()), 1);
+    }
+
+    cv::imshow(windowName, output);
+}
+
+void ShowPixelValue::UpdateOthers(int mouseX, int mouseY)
+{
+    for (ShowPixelValue* updateTarget : updateTargets) {
+        updateTarget->Update(mouseX, mouseY, true);
+    }
+}
+
+void ShowPixelValue::KeepUpdating(ShowPixelValue* other)
+{
+    assert(updateTargets.find(other) == updateTargets.end());
+    updateTargets.insert(other);
+}
+
+void ShowPixelValue::StopUpdating(ShowPixelValue* other)
+{
+    assert(updateTargets.find(other) != updateTargets.end());
+    updateTargets.erase(other);
 }
