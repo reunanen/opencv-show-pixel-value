@@ -1,4 +1,5 @@
 #include "show-pixel-value.h"
+#include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
 ShowPixelValue::ShowPixelValue(const std::string& windowName, const cv::Mat& input)
