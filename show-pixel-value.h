@@ -1,3 +1,6 @@
+#ifndef OPENCV_SHOW_PIXEL_VALUE_H
+#define OPENCV_SHOW_PIXEL_VALUE_H
+
 #include <opencv2/core/core.hpp>
 #include <unordered_set>
 
@@ -23,3 +26,5 @@ private:
     void UpdateOthers(int mouseX, int mouseY);
     static void OnMouse(int event, int mouseX, int mouseY, int flags, void* userdata);
 };
+
+#endif // OPENCV_SHOW_PIXEL_VALUE_H

@@ -1,3 +1,6 @@
+#ifndef OPENCV_SHOW_PIXEL_VALUE_CONNECTER_H
+#define OPENCV_SHOW_PIXEL_VALUE_CONNECTER_H
+
 #include "show-pixel-value.h"
 #include <memory>
 
@@ -11,3 +14,5 @@ public:
 private:
     std::vector<std::unique_ptr<ShowPixelValue>> windows;
 };
+
+#endif // OPENCV_SHOW_PIXEL_VALUE_CONNECTER_H
